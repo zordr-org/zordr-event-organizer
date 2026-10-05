@@ -25,8 +25,6 @@ export const DEFAULT_PAGE_SIZE = 10;
 
 export const MAX_PAGE_SIZE = 100;
 
-export const OTP_LENGTH = 6;
-
 export const SEARCH_DEBOUNCE_MS = 300;
 
 export const TOAST_DURATION_MS = 3000;

@@ -3,12 +3,9 @@ export const routes = {
 
   login: "/login",
 
-  verifyOtp: "/verify-otp",
-
   onboarding: {
-    root: "/onboarding/onboarding",
-    step: (step: number) =>
-      `/onboarding/onboarding/${step}`,
+    root: "/onboarding",
+    step: (step: number) => `/onboarding/${step}`,
     status: "/onboarding/status",
   },
 
@@ -17,10 +14,6 @@ export const routes = {
   events: {
     root: "/events",
     new: "/events/new",
-
-    view: (eventId: string) =>
-      `/events/${eventId}`,
-
     edit: (
       eventId: string,
       step = 1,

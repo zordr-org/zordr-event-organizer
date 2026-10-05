@@ -1,10 +1,10 @@
 "use client";
 
-import type {
-  ReactNode,
-} from "react";
+import type { ReactNode } from "react";
 
+import AuthGuardProvider from "./auth-guard-provider";
 import QueryProvider from "./query-provider";
+import ToastProvider from "./toast-provider";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -15,7 +15,11 @@ export default function Providers({
 }: ProvidersProps) {
   return (
     <QueryProvider>
-      {children}
+      <AuthGuardProvider>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </AuthGuardProvider>
     </QueryProvider>
   );
 }

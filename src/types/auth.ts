@@ -1,4 +1,4 @@
-export type AuthMethod = "password" | "otp";
+export type AuthMethod = "password";
 
 export type UserRole =
   | "organizer"
@@ -17,8 +17,7 @@ export type AuthUser = {
 
 export type LoginCredentials = {
   email: string;
-  password?: string;
-  otp?: string;
+  password: string;
 };
 
 export type AuthResponse = {

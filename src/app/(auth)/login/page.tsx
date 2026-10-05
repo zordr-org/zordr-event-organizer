@@ -9,7 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 
-import LoginForm from "@/features/auth/login-form";
+import LoginForm from "@/features/auth/components/login-form";
 
 const features = [
   {
