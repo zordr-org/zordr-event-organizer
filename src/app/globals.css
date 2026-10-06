@@ -128,3 +128,124 @@
     @apply font-sans;
   }
 }
+/* =========================================
+   ZORDR LOGIN PHONE INPUT
+   ========================================= */
+
+.zordr-phone-wrapper {
+  width: 100%;
+  height: 64px;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  background: #ffffff;
+  overflow: visible;
+  transition: border-color 0.2s ease;
+}
+
+.zordr-phone-wrapper:focus-within {
+  border-color: #10b981;
+}
+
+.zordr-phone-error {
+  border-color: #f87171;
+}
+
+/* Main phone component */
+.zordr-phone-input {
+  display: flex !important;
+  width: 100% !important;
+  height: 64px !important;
+}
+
+/* Country selector */
+.zordr-phone-input
+  .react-international-phone-country-selector {
+  flex-shrink: 0 !important;
+}
+
+.zordr-phone-input
+  .react-international-phone-country-selector-button {
+  width: 130px !important;
+  height: 64px !important;
+
+  border: none !important;
+  border-right: 1px solid #e2e8f0 !important;
+  border-radius: 16px 0 0 16px !important;
+
+  background: #ffffff !important;
+
+  padding: 0 14px 0 18px !important;
+
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  color: #0f172a !important;
+}
+
+/* Phone input area */
+.zordr-phone-input
+  .react-international-phone-input {
+  display: block !important;
+  flex: 1 1 auto !important;
+
+  width: auto !important;
+  min-width: 0 !important;
+
+  height: 64px !important;
+
+  border: none !important;
+  border-radius: 0 16px 16px 0 !important;
+
+  background: #ffffff !important;
+
+  padding: 0 20px !important;
+
+  font-size: 16px !important;
+  line-height: 64px !important;
+
+  color: #0f172a !important;
+
+  outline: none !important;
+}
+
+/* THIS is the placeholder */
+.zordr-phone-input
+  .react-international-phone-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+  font-size: 16px !important;
+}
+
+/* Country dropdown */
+.zordr-phone-input
+  .react-international-phone-country-selector-dropdown {
+  z-index: 9999 !important;
+
+  width: 300px !important;
+  max-height: 320px !important;
+
+  margin-top: 6px !important;
+
+  overflow-y: auto !important;
+
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.12),
+    0 4px 10px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Country items */
+.zordr-phone-input
+  .react-international-phone-country-selector-dropdown__list-item {
+  min-height: 46px !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+}
+
+.zordr-phone-input
+  .react-international-phone-country-selector-dropdown__list-item:hover {
+  background: #f0fdf4 !important;
+}
