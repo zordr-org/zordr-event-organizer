@@ -11,7 +11,8 @@ export const organizationDetailsSchema = z.object({
     .trim()
     .min(1, "Organization type is required."),
 
-  logoUrl: z.string().optional(),
+  contactName: z.string().trim().min(2, "Your full name is required."),
+  logoUrl: z.string().min(1, "Organization logo is required."),
 });
 
 export const contactAddressSchema = z.object({
@@ -23,7 +24,8 @@ export const contactAddressSchema = z.object({
   phone: z
     .string()
     .trim()
-    .min(10, "Contact number is required."),
+    .regex(/^\+?[\d\s()-]+$/, "Enter a valid contact number.")
+    .refine((value) => { const digits = value.replace(/\D/g, ""); return digits.length >= 10 && digits.length <= 15; }, "Enter a valid contact number."),
 
   website: z.string().optional(),
   instagram: z.string().optional(),
@@ -46,7 +48,7 @@ export const contactAddressSchema = z.object({
   pincode: z
     .string()
     .trim()
-    .min(6, "Valid pincode is required."),
+    .regex(/^[1-9]\d{5}$/, "Enter a valid six-digit pincode."),
 
   mapsLink: z.string().optional(),
 });
@@ -60,18 +62,20 @@ export const payoutDetailsSchema = z.object({
   accountNumber: z
     .string()
     .trim()
-    .min(5, "Account number is required."),
+    .transform((value) => value.replace(/\s/g, ""))
+    .pipe(z.string().regex(/^\d{9,18}$/, "Enter an account number containing 9–18 digits.")),
 
   confirmAccountNumber: z
     .string()
     .trim()
-    .min(5, "Please confirm the account number."),
+    .transform((value) => value.replace(/\s/g, ""))
+    .pipe(z.string().regex(/^\d{9,18}$/, "Confirm your account number using 9–18 digits.")),
 
   ifsc: z
     .string()
     .trim()
-    .min(11, "Valid IFSC code is required.")
-    .max(11, "Valid IFSC code is required."),
+    .toUpperCase()
+    .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Enter a valid 11-character IFSC code."),
 
   bankName: z
     .string()
@@ -83,7 +87,7 @@ export const payoutDetailsSchema = z.object({
     .trim()
     .min(2, "Branch name is required."),
 
-  upiId: z.string().optional(),
+  upiId: z.string().trim().refine((value) => !value || /^[a-zA-Z0-9._-]+@[a-zA-Z][a-zA-Z0-9.-]+$/.test(value), "Enter a valid UPI ID (e.g. name@okaxis).").optional(),
 }).refine(
   (data) =>
     data.accountNumber === data.confirmAccountNumber,

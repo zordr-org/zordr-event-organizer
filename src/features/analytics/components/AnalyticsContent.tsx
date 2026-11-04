@@ -12,7 +12,7 @@ export default function AnalyticsContent() {
   const stats = [
     {
       title: "Total Revenue",
-      value: "â‚¹0",
+      value: "₹0",
       icon: IndianRupee,
     },
     {

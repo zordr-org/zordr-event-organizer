@@ -233,7 +233,7 @@ export default function OnboardingStatusContent() {
               </div>
 
               <p className="mt-6 text-center text-xs text-slate-400">
-                Zordr Â· Events.
+                Zordr · Events.
                 Experiences. Together.
               </p>
             </div>
@@ -266,7 +266,7 @@ function StatusStep({
               : "border border-slate-600 text-slate-500"
         }`}
       >
-        {completed ? "âœ“" : number}
+        {completed ? "✓" : number}
       </div>
 
       <span

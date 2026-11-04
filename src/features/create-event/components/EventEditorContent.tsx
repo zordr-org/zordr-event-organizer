@@ -734,7 +734,7 @@ export default function EventEditorContent() {
                               Schedule Preview
                             </p>
                             <p className="mt-1 text-sm text-slate-500">
-                              {form.startDate || "Date not selected"} Ã‚Â·{" "}
+                              {form.startDate || "Date not selected"} ·{" "}
                               {form.startTime || "--:--"} -{" "}
                               {form.endTime || "--:--"}
                             </p>
@@ -761,7 +761,7 @@ export default function EventEditorContent() {
                           </p>
 
                           <p className="mt-1 text-xs text-slate-400">
-                            PNG, JPG or WEBP Ã‚Â· Recommended 1200 Ãƒâ€” 630
+                            PNG, JPG or WEBP · Recommended 1200 × 630
                           </p>
 
                           <button
@@ -1386,7 +1386,7 @@ export default function EventEditorContent() {
                             <div>
                               <p className="text-xs text-slate-400">Price</p>
                               <p className="mt-1 text-sm font-medium text-slate-800">
-                                Ã¢â€šÂ¹{form.ticketPrice || "0"}
+                                ₹{form.ticketPrice || "0"}
                               </p>
                             </div>
 
@@ -1661,7 +1661,7 @@ export default function EventEditorContent() {
                         <div>
                           <p className="text-[10px] text-slate-400">Ticket</p>
                           <p className="text-xs font-medium text-slate-700">
-                            {form.ticketName || "General Pass"} Ã‚Â· Ã¢â€šÂ¹
+                            {form.ticketName || "General Pass"} · ₹
                             {form.ticketPrice || "0"}
                           </p>
                         </div>
@@ -1744,7 +1744,7 @@ export default function EventEditorContent() {
                 <div className="rounded-lg border border-slate-200 p-4">
                   <p className="text-xs text-slate-400">Date & Time</p>
                   <p className="mt-1 text-sm font-medium text-slate-800">
-                    {form.startDate} Ã‚Â· {form.startTime} - {form.endTime}
+                    {form.startDate} · {form.startTime} - {form.endTime}
                   </p>
                 </div>
 
@@ -1758,7 +1758,7 @@ export default function EventEditorContent() {
                 <div className="rounded-lg border border-slate-200 p-4">
                   <p className="text-xs text-slate-400">Ticket</p>
                   <p className="mt-1 text-sm font-medium text-slate-800">
-                    {form.ticketName} Ã‚Â· Ã¢â€šÂ¹{form.ticketPrice}
+                    {form.ticketName} · ₹{form.ticketPrice}
                   </p>
                 </div>
 

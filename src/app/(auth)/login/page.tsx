@@ -194,22 +194,6 @@ export default function LoginPage() {
               
               <div className="rounded-[22px] border border-slate-200 bg-white p-8 shadow-[0_8px_30px_rgba(15,23,42,0.05)] sm:p-10">
                 
-                {/* Heading */}
-                <div className="mb-9">
-                  <p className="text-sm font-bold tracking-wide text-[#20a974]">
-                    ORGANIZER LOGIN
-                  </p>
-
-                  <h2 className="mt-7 text-4xl font-bold tracking-[-1.5px] text-slate-950 sm:text-[42px]">
-                    Welcome Back!
-                  </h2>
-
-                  <p className="mt-3 max-w-[430px] text-lg leading-7 text-slate-500">
-                    Login to your organizer account to manage
-                    your events.
-                  </p>
-                </div>
-
                 <LoginForm />
               </div>
             </div>

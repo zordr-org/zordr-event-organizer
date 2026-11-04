@@ -829,7 +829,7 @@ export default function SettlementsContent() {
         <div className="px-5 pb-8 pt-5 xl:px-6">
           {/* Back */}
           <Link
-            href="/events"
+            href={`/events/${currentEvent.id}`}
             className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900"
           >
             <ArrowLeft size={17} />
@@ -964,7 +964,7 @@ export default function SettlementsContent() {
                 </span>
 
                 <Link
-                  href="/events"
+                  href={`/events/${currentEvent.id}`}
                   className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   View Event
@@ -1388,6 +1388,8 @@ export default function SettlementsContent() {
                                 <td className="relative px-2 py-3">
                                   <button
                                     type="button"
+                                    aria-label={`Actions for transaction ${transaction.id}`}
+                                    aria-expanded={transactionMenu === transaction.id}
                                     onClick={() =>
                                       setTransactionMenu(
                                         transactionMenu ===
@@ -1489,6 +1491,7 @@ export default function SettlementsContent() {
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
+                        aria-label="Previous transactions page"
                         disabled={
                           safePage === 1
                         }
@@ -1545,6 +1548,7 @@ export default function SettlementsContent() {
 
                       <button
                         type="button"
+                        aria-label="Next transactions page"
                         disabled={
                           safePage ===
                           totalPages
@@ -2014,6 +2018,7 @@ export default function SettlementsContent() {
               </div>
 
               <button
+                aria-label="Close transaction details"
                 type="button"
                 onClick={() =>
                   setSelectedTransaction(
@@ -2143,6 +2148,7 @@ export default function SettlementsContent() {
               </div>
 
               <button
+                aria-label="Close settlement history"
                 type="button"
                 onClick={() =>
                   setShowAllSettlements(
@@ -2242,6 +2248,7 @@ export default function SettlementsContent() {
               </div>
 
               <button
+                aria-label="Close invoice"
                 type="button"
                 onClick={() =>
                   setShowInvoice(null)

@@ -40,7 +40,7 @@ import type {
 function formatCurrency(
   value: number,
 ) {
-  return `â‚¹${value.toLocaleString(
+  return `₹${value.toLocaleString(
     "en-IN",
   )}`;
 }
@@ -102,9 +102,9 @@ export default function MyEventsPage() {
    * events array. The data comes from:
    *
    * mock/db.ts
-   *      â†“
+   *      ↓
    * events.service.ts
-   *      â†“
+   *      ↓
    * this page
    */
   const events: EventDetails[] =
@@ -489,7 +489,7 @@ export default function MyEventsPage() {
                                       {
                                         event.date
                                       }{" "}
-                                      â€¢{" "}
+                                      •{" "}
                                       {
                                         event.time
                                       }
@@ -683,7 +683,7 @@ export default function MyEventsPage() {
                     0
                       ? 1
                       : 0}
-                    â€“
+                    –
                     {
                       filteredEvents.length
                     }

@@ -1,5 +1,7 @@
 "use client";
 
+import { formatTicketPrice } from "@/lib/frontend-validation";
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -120,6 +122,11 @@ const initialTickets: TicketType[] = [
 
 export default function CreateEventContent() {
   const [activeStep, setActiveStep] = useState(1);
+  const [fieldErrors, setFieldErrors] = useState<{
+    eventName?: string;
+    shortDescription?: string;
+  }>({});
+  const [showAllPreviewTickets, setShowAllPreviewTickets] = useState(false);
 
   const [openSections, setOpenSections] = useState<
     Record<SectionName, boolean>
@@ -141,7 +148,7 @@ export default function CreateEventContent() {
   );
 
   const [detailedDescription, setDetailedDescription] = useState(
-    "Join us for Crescendo Fest 2026 Ã¢â‚¬â€œ a celebration of music, creativity and culture.\n\nFeaturing top college bands, special guest artists, food stalls, and more.\n\nLet the music bring us together!",
+    "Join us for Crescendo Fest 2026 – a celebration of music, creativity and culture.\n\nFeaturing top college bands, special guest artists, food stalls, and more.\n\nLet the music bring us together!",
   );
 
   const [venue, setVenue] = useState("KITSW Campus, Warangal");
@@ -209,6 +216,9 @@ export default function CreateEventContent() {
       ...current,
       [section]: true,
     }));
+    window.requestAnimationFrame(() => {
+      document.querySelector(`[data-event-section="${section}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const handleSaveDraft = () => {
@@ -234,32 +244,26 @@ export default function CreateEventContent() {
   };
 
   const handleNext = () => {
+    if (activeStep === 1) {
+      const errors: { eventName?: string; shortDescription?: string } = {};
+      if (!eventName.trim()) {
+        errors.eventName = "Event Name is required.";
+      }
+      if (!shortDescription.trim()) {
+        errors.shortDescription = "Short Description is required.";
+      }
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        setOpenSections((current) => ({
+          ...current,
+          basic: true,
+        }));
+        return;
+      }
+    }
+
     if (activeStep < 7) {
-      const nextStep = activeStep + 1;
-
-      setActiveStep(nextStep);
-
-      const sectionMap: Record<number, SectionName> = {
-        1: "venue",
-        2: "schedule",
-        3: "media",
-        4: "tickets",
-        5: "registration",
-        6: "publish",
-        7: "publish",
-      };
-
-      const section = sectionMap[nextStep];
-
-      setOpenSections((current) => ({
-        ...current,
-        [section]: true,
-      }));
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      openStep(activeStep + 1);
     }
   };
 
@@ -397,10 +401,11 @@ export default function CreateEventContent() {
               {/* ==================== FORM COLUMN ==================== */}
               <section className="min-w-0 space-y-2.5">
                 {/* BASIC INFORMATION */}
-                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
+                <div data-event-section="basic" className="scroll-mt-24 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
                   <button
                     type="button"
                     onClick={() => toggleSection("basic")}
+                    aria-expanded={openSections.basic}
                     className="flex w-full items-center justify-between px-4 py-3 text-left"
                   >
                     <div className="flex items-center gap-3">
@@ -440,11 +445,28 @@ export default function CreateEventContent() {
 
                           <input
                             id="event-name"
+                            aria-label="Event Name"
+                            aria-invalid={Boolean(fieldErrors.eventName)}
+                            aria-describedby={fieldErrors.eventName ? "event-name-error" : undefined}
                             value={eventName}
-                            onChange={(e) => setEventName(e.target.value)}
+                            onChange={(e) => {
+                              setEventName(e.target.value);
+                              if (fieldErrors.eventName) {
+                                setFieldErrors((prev) => ({ ...prev, eventName: undefined }));
+                              }
+                            }}
                             placeholder="Enter event name"
-                            className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#35b889] focus:ring-3 focus:ring-emerald-50"
+                            className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-3 focus:ring-emerald-50 ${
+                              fieldErrors.eventName
+                                ? "border-red-500 focus:border-red-500"
+                                : "border-slate-200 focus:border-[#35b889]"
+                            }`}
                           />
+                          {fieldErrors.eventName && (
+                            <p id="event-name-error" role="alert" className="mt-1 text-xs font-medium text-red-600">
+                              {fieldErrors.eventName}
+                            </p>
+                          )}
 
                           <p className="mt-1 text-[11px] text-slate-400">
                             Keep it short and catchy.
@@ -504,13 +526,28 @@ export default function CreateEventContent() {
 
                         <textarea
                           id="short-description"
+                          aria-label="Short Description"
+                          aria-invalid={Boolean(fieldErrors.shortDescription)}
+                          aria-describedby={fieldErrors.shortDescription ? "short-description-error" : undefined}
                           value={shortDescription}
-                          onChange={(e) =>
-                            setShortDescription(e.target.value.slice(0, 300))
-                          }
+                          onChange={(e) => {
+                            setShortDescription(e.target.value.slice(0, 300));
+                            if (fieldErrors.shortDescription) {
+                              setFieldErrors((prev) => ({ ...prev, shortDescription: undefined }));
+                            }
+                          }}
                           rows={3}
-                          className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm leading-5 text-slate-900 outline-none transition focus:border-[#35b889] focus:ring-3 focus:ring-emerald-50"
+                          className={`w-full resize-none rounded-lg border bg-white px-3 py-2.5 text-sm leading-5 text-slate-900 outline-none transition focus:ring-3 focus:ring-emerald-50 ${
+                            fieldErrors.shortDescription
+                              ? "border-red-500 focus:border-red-500"
+                              : "border-slate-200 focus:border-[#35b889]"
+                          }`}
                         />
+                        {fieldErrors.shortDescription && (
+                          <p id="short-description-error" role="alert" className="mt-1 text-xs font-medium text-red-600">
+                            {fieldErrors.shortDescription}
+                          </p>
+                        )}
 
                         <div className="mt-1 flex items-center justify-between">
                           <p className="text-[11px] text-slate-400">
@@ -644,12 +681,15 @@ export default function CreateEventContent() {
                   title="Venue"
                   description="Set the location or choose online mode."
                   icon={MapPin}
+                  section="venue"
                   isOpen={openSections.venue}
                   onToggle={() => toggleSection("venue")}
                 >
                   <div className="grid gap-4 md:grid-cols-2">
-                    <FormField label="Venue Name">
+                    <FormField label="Venue Name" htmlFor="venue-name">
                       <input
+                        id="venue-name"
+                        aria-label="Venue Name"
                         value={venue}
                         onChange={(e) => setVenue(e.target.value)}
                         className={inputClass}
@@ -657,8 +697,8 @@ export default function CreateEventContent() {
                       />
                     </FormField>
 
-                    <FormField label="Event Mode">
-                      <select className={selectClass} defaultValue="In-person">
+                    <FormField label="Event Mode" htmlFor="venue-mode">
+                      <select id="venue-mode" aria-label="Event Mode" className={selectClass} defaultValue="In-person">
                         <option>In-person</option>
                         <option>Online</option>
                         <option>Hybrid</option>
@@ -667,8 +707,10 @@ export default function CreateEventContent() {
                   </div>
 
                   <div className="mt-4">
-                    <FormField label="Address">
+                    <FormField label="Address" htmlFor="venue-address">
                       <input
+                        id="venue-address"
+                        aria-label="Address"
                         defaultValue="KITSW Campus, Warangal, Telangana"
                         className={inputClass}
                       />
@@ -681,12 +723,15 @@ export default function CreateEventContent() {
                   title="Schedule"
                   description="Set the date and time for your event."
                   icon={CalendarDays}
+                  section="schedule"
                   isOpen={openSections.schedule}
                   onToggle={() => toggleSection("schedule")}
                 >
                   <div className="grid gap-4 md:grid-cols-2">
-                    <FormField label="Event Date">
+                    <FormField label="Event Date" htmlFor="schedule-event-date">
                       <input
+                        id="schedule-event-date"
+                        aria-label="Event Date"
                         type="date"
                         value={eventDate}
                         onChange={(e) => setEventDate(e.target.value)}
@@ -694,8 +739,10 @@ export default function CreateEventContent() {
                       />
                     </FormField>
 
-                    <FormField label="Start Time">
+                    <FormField label="Start Time" htmlFor="schedule-start-time">
                       <input
+                        id="schedule-start-time"
+                        aria-label="Start Time"
                         type="time"
                         value={eventTime}
                         onChange={(e) => setEventTime(e.target.value)}
@@ -705,16 +752,20 @@ export default function CreateEventContent() {
                   </div>
 
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <FormField label="End Date">
+                    <FormField label="End Date" htmlFor="schedule-end-date">
                       <input
+                        id="schedule-end-date"
+                        aria-label="End Date"
                         type="date"
                         defaultValue="2026-10-12"
                         className={inputClass}
                       />
                     </FormField>
 
-                    <FormField label="End Time">
+                    <FormField label="End Time" htmlFor="schedule-end-time">
                       <input
+                        id="schedule-end-time"
+                        aria-label="End Time"
                         type="time"
                         defaultValue="22:00"
                         className={inputClass}
@@ -728,6 +779,7 @@ export default function CreateEventContent() {
                   title="Media"
                   description="Upload event images and banner."
                   icon={ImageIcon}
+                  section="media"
                   isOpen={openSections.media}
                   onToggle={() => toggleSection("media")}
                 >
@@ -758,6 +810,7 @@ export default function CreateEventContent() {
                   title="Tickets"
                   description="Create ticket types and set pricing."
                   icon={Ticket}
+                  section="tickets"
                   isOpen={openSections.tickets}
                   onToggle={() => toggleSection("tickets")}
                 >
@@ -768,8 +821,10 @@ export default function CreateEventContent() {
                         className="rounded-xl border border-slate-200 p-4"
                       >
                         <div className="grid gap-3 md:grid-cols-[1.3fr_0.7fr]">
-                          <FormField label="Ticket Name">
+                          <FormField label="Ticket Name" htmlFor={`ticket-${index}-name`}>
                             <input
+                              id={`ticket-${index}-name`}
+                              aria-label={`Ticket ${index + 1} Name`}
                               value={ticket.name}
                               onChange={(e) =>
                                 updateTicket(index, "name", e.target.value)
@@ -778,13 +833,15 @@ export default function CreateEventContent() {
                             />
                           </FormField>
 
-                          <FormField label="Price">
+                          <FormField label="Price" htmlFor={`ticket-${index}-price`}>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
-                                Ã¢â€šÂ¹
+                                ₹
                               </span>
 
                               <input
+                                id={`ticket-${index}-price`}
+                                aria-label={`Ticket ${index + 1} Price`}
                                 value={ticket.price}
                                 onChange={(e) =>
                                   updateTicket(
@@ -800,8 +857,10 @@ export default function CreateEventContent() {
                         </div>
 
                         <div className="mt-3">
-                          <FormField label="Description">
+                          <FormField label="Description" htmlFor={`ticket-${index}-description`}>
                             <input
+                              id={`ticket-${index}-description`}
+                              aria-label={`Ticket ${index + 1} Description`}
                               value={ticket.description}
                               onChange={(e) =>
                                 updateTicket(
@@ -833,6 +892,7 @@ export default function CreateEventContent() {
                   title="Registration Form"
                   description="Collect additional details from attendees."
                   icon={FileText}
+                  section="registration"
                   isOpen={openSections.registration}
                   onToggle={() => toggleSection("registration")}
                 >
@@ -872,6 +932,7 @@ export default function CreateEventContent() {
                   title="Publish Settings"
                   description="Review and make your event live."
                   icon={ShieldCheck}
+                  section="publish"
                   isOpen={openSections.publish}
                   onToggle={() => toggleSection("publish")}
                 >
@@ -894,6 +955,14 @@ export default function CreateEventContent() {
                       </div>
                     </div>
                   </div>
+                  {(!eventName.trim() || !shortDescription.trim()) && (
+                    <div role="alert" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs font-medium text-amber-800">
+                      Incomplete required fields: Please fill in
+                      {!eventName.trim() ? " Event Name" : ""}
+                      {!eventName.trim() && !shortDescription.trim() ? " and" : ""}
+                      {!shortDescription.trim() ? " Short Description" : ""} in Basic Information before publishing.
+                    </div>
+                  )}
                 </CollapsibleSection>
 
                 {/* Mobile step navigation */}
@@ -915,9 +984,10 @@ export default function CreateEventContent() {
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#18aa75] px-3 py-2 text-xs font-semibold text-white"
+                    disabled={activeStep === 7 && (!eventName.trim() || !shortDescription.trim())}
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#18aa75] px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Next
+                    {activeStep === 7 ? "Publish Event" : "Next"}
                     <ArrowRight size={14} />
                   </button>
                 </div>
@@ -927,7 +997,8 @@ export default function CreateEventContent() {
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#13ae73] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#109c68]"
+                    disabled={activeStep === 7 && (!eventName.trim() || !shortDescription.trim())}
+                    className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#13ae73] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#109c68] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {activeStep === 7 ? "Publish Event" : `Next: ${steps[activeStep].title}`}
                     <ArrowRight size={17} />
@@ -1010,7 +1081,7 @@ export default function CreateEventContent() {
                             className="text-slate-500"
                           />
                           <span>
-                            {previewDate} Ã¢â‚¬Â¢ {previewTime} onwards
+                            {previewDate} • {previewTime} onwards
                           </span>
                         </div>
 
@@ -1067,46 +1138,47 @@ export default function CreateEventContent() {
 
                         <button
                           type="button"
-                          className="text-xs font-semibold text-[#159568]"
+                          onClick={() => setShowAllPreviewTickets(!showAllPreviewTickets)}
+                          className="text-xs font-semibold text-[#159568] hover:underline"
                         >
-                          View all
+                          {showAllPreviewTickets ? "Show less" : "View all"}
                         </button>
                       </div>
 
                       <div className="mt-2.5 space-y-2">
-                        {tickets.slice(0, 3).map((ticket, index) => (
-                          <div
-                            key={`${ticket.name}-preview-${index}`}
-                            className="rounded-lg border border-slate-200 p-3"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-medium text-slate-700">
-                                  {ticket.name}
-                                </p>
+                        {(showAllPreviewTickets ? tickets : tickets.slice(0, 3)).map((ticket, index) => {
+                          const formattedPrice = formatTicketPrice(String(ticket.price || "0"));
+                          return (
+                            <div
+                              key={`${ticket.name}-preview-${index}`}
+                              className="rounded-lg border border-slate-200 p-3"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-xs font-medium text-slate-700">
+                                    {ticket.name}
+                                  </p>
 
-                                <p className="mt-1 text-base font-bold text-slate-900">
-                                  Ã¢â€šÂ¹
-                                  {Number(ticket.price || 0).toLocaleString(
-                                    "en-IN",
-                                  )}
-                                </p>
+                                  <p className="mt-1 text-base font-bold text-slate-900">
+                                    {formattedPrice === "Invalid price" ? formattedPrice : `\u20B9${formattedPrice}`}
+                                  </p>
 
-                                <p className="mt-1 text-[10px] text-slate-500">
-                                  {ticket.description}
-                                </p>
-                              </div>
+                                  <p className="mt-1 text-[10px] text-slate-500">
+                                    {ticket.description}
+                                  </p>
+                                </div>
 
-                              <span className="rounded-lg bg-[#eafaf3] px-2 py-2 text-center text-[9px] font-semibold leading-3 text-[#159568]">
-                                Available
-                                <br />
-                                <span className="text-[10px]">
-                                  {ticket.available} left
+                                <span className="rounded-lg bg-[#eafaf3] px-2 py-2 text-center text-[9px] font-semibold leading-3 text-[#159568]">
+                                  Available
+                                  <br />
+                                  <span className="text-[10px]">
+                                    {ticket.available} left
+                                  </span>
                                 </span>
-                              </span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       <button
@@ -1139,14 +1211,16 @@ const selectClass =
 
 function FormField({
   label,
+  htmlFor,
   children,
 }: {
   label: string;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-semibold text-slate-800">
+      <label htmlFor={htmlFor} className="mb-1.5 block text-xs font-semibold text-slate-800">
         {label}
       </label>
 
@@ -1156,6 +1230,7 @@ function FormField({
 }
 
 function CollapsibleSection({
+  section,
   title,
   description,
   icon: Icon,
@@ -1163,6 +1238,7 @@ function CollapsibleSection({
   onToggle,
   children,
 }: {
+  section: string;
   title: string;
   description: string;
   icon: typeof MapPin;
@@ -1171,10 +1247,11 @@ function CollapsibleSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.02)]">
+    <div data-event-section={section} className="scroll-mt-24 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.02)]">
       <button
         type="button"
         onClick={onToggle}
+        aria-expanded={isOpen}
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
         <div className="flex items-center gap-3">

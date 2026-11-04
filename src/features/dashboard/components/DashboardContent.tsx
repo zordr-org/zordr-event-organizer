@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
+import { getEvents } from "@/services/events.service";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -568,9 +569,7 @@ export default function DashboardContent() {
 
                       return (
                         <Link
-                          href={
-                            routes.events.root
-                          }
+                          href={getEvents().find((item) => item.title === event.title) ? `/events/${getEvents().find((item) => item.title === event.title)!.id}` : routes.events.root}
                           key={event.title}
                           className="flex gap-4 px-5 py-4 transition hover:bg-[#fafcfb] sm:px-6"
                         >
@@ -599,7 +598,7 @@ export default function DashboardContent() {
                                   {
                                     event.date
                                   }
-                                  , 2026 â€¢{" "}
+                                  , 2026 •{" "}
                                   {
                                     event.time
                                   }
