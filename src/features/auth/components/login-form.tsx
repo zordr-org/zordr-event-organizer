@@ -34,6 +34,8 @@ export default function LoginForm() {
   const [confirmPassword, setConfirmPassword] =
     useState("");
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const [error, setError] =
     useState("");
 
@@ -47,6 +49,7 @@ export default function LoginForm() {
     nextMode: Mode,
   ) => {
     setMode(nextMode);
+    setFieldErrors({});
     setError("");
     setMessage("");
   };
@@ -144,6 +147,20 @@ export default function LoginForm() {
     event: React.FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
+    if (loading) return;
+    const errors: Record<string, string> = {};
+    const emailId = `${mode === "login" ? "login" : mode === "signup" ? "signup" : "forgot"}-email`;
+    const passwordId = mode === "forgot" ? "forgot-new-password" : `${mode}-password`;
+    const confirmationId = mode === "forgot" ? "forgot-confirm-password" : "signup-confirm-password";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors[emailId] = "Please enter a valid email address.";
+    if (!password || (mode !== "login" && password.length < 6)) errors[passwordId] = mode === "login" ? "Password is required." : "Use at least 6 characters for your password.";
+    if (mode !== "login" && (!confirmPassword || confirmPassword !== password)) errors[confirmationId] = "Passwords must match.";
+    setFieldErrors(errors);
+    setError("");
+    if (Object.keys(errors).length) {
+      document.getElementById(Object.keys(errors)[0])?.focus();
+      return;
+    }
 
     if (mode === "login") {
       void handleLogin();
@@ -161,12 +178,21 @@ export default function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
+      noValidate
+      onChange={() => setFieldErrors({})}
       className="w-full space-y-6"
     >
+      <div className="mb-9">
+        <p className="text-sm font-bold tracking-wide text-[#20a974]">{mode === "login" ? "ORGANIZER LOGIN" : mode === "signup" ? "ORGANIZER SIGNUP" : "PASSWORD RESET"}</p>
+        <h2 className="mt-7 text-4xl font-bold tracking-tight text-slate-950">{mode === "login" ? "Welcome Back!" : mode === "signup" ? "Create your account" : "Reset your password"}</h2>
+        <p className="mt-3 text-lg leading-7 text-slate-500">{mode === "login" ? "Login to your organizer account to manage your events." : mode === "signup" ? "Set up your organizer account to start creating events." : "Enter your organizer email and choose a new password."}</p>
+      </div>
+      {Object.keys(fieldErrors).length > 0 && <div role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">{Object.entries(fieldErrors).map(([id, message]) => <p id={`${id}-error`} key={id}>{message}</p>)}</div>}
       {mode !== "forgot" && (
         <div className="grid grid-cols-2 rounded-xl bg-slate-100 p-1">
           <button
             type="button"
+            aria-pressed={mode === "login"}
             onClick={() =>
               handleModeChange("login")
             }
@@ -181,6 +207,7 @@ export default function LoginForm() {
 
           <button
             type="button"
+            aria-pressed={mode === "signup"}
             onClick={() =>
               handleModeChange("signup")
             }
@@ -219,6 +246,8 @@ export default function LoginForm() {
 
             <input
               id="login-email"
+              aria-invalid={Boolean(fieldErrors["login-email"])}
+              aria-describedby={fieldErrors["login-email"] ? "login-email-error" : undefined}
               name="email"
               type="email"
               autoComplete="email"
@@ -251,6 +280,8 @@ export default function LoginForm() {
 
               <input
                 id="login-password"
+              aria-invalid={Boolean(fieldErrors["login-password"])}
+              aria-describedby={fieldErrors["login-password"] ? "login-password-error" : undefined}
                 name="password"
                 type="password"
                 autoComplete="current-password"
@@ -285,7 +316,7 @@ export default function LoginForm() {
           )}
 
           {error && (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+            <div role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
               {error}
             </div>
           )}
@@ -338,6 +369,8 @@ export default function LoginForm() {
 
             <input
               id="signup-email"
+              aria-invalid={Boolean(fieldErrors["signup-email"])}
+              aria-describedby={fieldErrors["signup-email"] ? "signup-email-error" : undefined}
               name="signup-email"
               type="email"
               autoComplete="email"
@@ -363,6 +396,8 @@ export default function LoginForm() {
 
             <input
               id="signup-password"
+              aria-invalid={Boolean(fieldErrors["signup-password"])}
+              aria-describedby={fieldErrors["signup-password"] ? "signup-password-error" : undefined}
               name="signup-password"
               type="password"
               autoComplete="new-password"
@@ -388,6 +423,8 @@ export default function LoginForm() {
 
             <input
               id="signup-confirm-password"
+              aria-invalid={Boolean(fieldErrors["signup-confirm-password"])}
+              aria-describedby={fieldErrors["signup-confirm-password"] ? "signup-confirm-password-error" : undefined}
               name="signup-confirm-password"
               type="password"
               autoComplete="new-password"
@@ -404,7 +441,7 @@ export default function LoginForm() {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+            <div role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
               {error}
             </div>
           )}
@@ -449,21 +486,6 @@ export default function LoginForm() {
       {mode === "forgot" && (
         <>
           <div>
-            <p className="text-sm font-bold tracking-wide text-[#20a974]">
-              PASSWORD RESET
-            </p>
-
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-              Reset your password
-            </h2>
-
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Enter your organizer email and
-              choose a new password.
-            </p>
-          </div>
-
-          <div>
             <label
               htmlFor="forgot-email"
               className="mb-2 block text-sm font-semibold text-slate-900"
@@ -473,6 +495,8 @@ export default function LoginForm() {
 
             <input
               id="forgot-email"
+              aria-invalid={Boolean(fieldErrors["forgot-email"])}
+              aria-describedby={fieldErrors["forgot-email"] ? "forgot-email-error" : undefined}
               name="forgot-email"
               type="email"
               autoComplete="email"
@@ -499,6 +523,8 @@ export default function LoginForm() {
 
             <input
               id="forgot-new-password"
+              aria-invalid={Boolean(fieldErrors["forgot-new-password"])}
+              aria-describedby={fieldErrors["forgot-new-password"] ? "forgot-new-password-error" : undefined}
               name="forgot-new-password"
               type="password"
               autoComplete="new-password"
@@ -524,6 +550,8 @@ export default function LoginForm() {
 
             <input
               id="forgot-confirm-password"
+              aria-invalid={Boolean(fieldErrors["forgot-confirm-password"])}
+              aria-describedby={fieldErrors["forgot-confirm-password"] ? "forgot-confirm-password-error" : undefined}
               name="forgot-confirm-password"
               type="password"
               autoComplete="new-password"
@@ -540,7 +568,7 @@ export default function LoginForm() {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+            <div role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
               {error}
             </div>
           )}

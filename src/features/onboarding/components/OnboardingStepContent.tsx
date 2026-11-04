@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useState } from "react";
+import { organizationDetailsSchema, contactAddressSchema, payoutDetailsSchema } from "@/schemas/onboarding";
+import { useOnboardingDraft, useOnboardingValue } from "@/features/onboarding/store/onboarding-store";
+import { validateUpload } from "@/lib/frontend-validation";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -27,6 +30,16 @@ import {
   User,
   WalletCards,
 } from "lucide-react";
+
+const FieldErrors = createContext<Record<string, string>>({});
+function useField(label: string) {
+  const id = useId();
+  const error = useContext(FieldErrors)[label];
+  return { id, error, props: { id, "aria-label": label, "aria-invalid": Boolean(error), "aria-describedby": error ? `${id}-error` : undefined } };
+}
+function FieldError({ id, error }: { id: string; error?: string }) {
+  return error ? <p id={`${id}-error`} className="mt-1.5 text-xs font-medium text-red-600">{error}</p> : null;
+}
 
 type StepNumber = 1 | 2 | 3 | 4 | 5;
 
@@ -115,75 +128,77 @@ export default function OnboardingStepContent() {
       : 1;
 
   const [organizationName, setOrganizationName] =
-    useState("KITSW Cultural Club");
+    useOnboardingValue("organizationName", "KITSW Cultural Club");
 
-  const [organizationType, setOrganizationType] = useState(
+  const [organizationType, setOrganizationType] = useOnboardingValue("organizationType",
     "College Club / Student Body"
   );
 
   const [contactName, setContactName] =
-    useState("Rohit Varma");
+    useOnboardingValue("contactName", "Rohit Varma");
 
   const [mobile, setMobile] =
-    useState("98765 43210");
+    useOnboardingValue("mobile", "98765 43210");
 
   const [email, setEmail] =
-    useState("rohit.varma@kitsw.ac.in");
+    useOnboardingValue("email", "rohit.varma@kitsw.ac.in");
 
   const [alternateContact, setAlternateContact] =
-    useState("");
+    useOnboardingValue("alternateContact", "");
 
-  const [address, setAddress] = useState(
+  const [address, setAddress] = useOnboardingValue("address",
     "Kakatiya Institute of Technology and Science, Warangal"
   );
 
-  const [city, setCity] = useState("Warangal");
+  const [city, setCity] = useOnboardingValue("city", "Warangal");
 
-  const [state, setState] = useState("Telangana");
+  const [state, setState] = useOnboardingValue("state", "Telangana");
 
-  const [pincode, setPincode] = useState("506015");
+  const [pincode, setPincode] = useOnboardingValue("pincode", "506015");
 
   const [officialEmail, setOfficialEmail] =
-    useState("contact@kitswclub.in");
+    useOnboardingValue("officialEmail", "contact@kitswclub.in");
 
   const [publicContact, setPublicContact] =
-    useState("98765 43210");
+    useOnboardingValue("publicContact", "98765 43210");
 
   const [website, setWebsite] =
-    useState("https://www.yourclub.in");
+    useOnboardingValue("website", "https://www.yourclub.in");
 
   const [instagram, setInstagram] =
-    useState("@kitsw_cultural");
+    useOnboardingValue("instagram", "@kitsw_cultural");
 
-  const [fullAddress, setFullAddress] = useState(
-    "Kakatiya Institute of Technology and Science,\nOpp. Yerragattu Gutta, Warangal â€“ 506015"
+  const [fullAddress, setFullAddress] = useOnboardingValue("fullAddress",
+    "Kakatiya Institute of Technology and Science,\nOpp. Yerragattu Gutta, Warangal – 506015"
   );
 
   const [mapsLink, setMapsLink] =
-    useState("https://maps.google.com/?q=KITSW");
+    useOnboardingValue("mapsLink", "https://maps.google.com/?q=KITSW");
 
   const [accountHolder, setAccountHolder] =
-    useState("KITSW Cultural Club");
+    useOnboardingValue("accountHolder", "KITSW Cultural Club");
 
   const [accountNumber, setAccountNumber] =
-    useState("5012 3456 7890");
+    useOnboardingValue("accountNumber", "5012 3456 7890");
 
   const [confirmAccountNumber, setConfirmAccountNumber] =
-    useState("5012 3456 7890");
+    useOnboardingValue("confirmAccountNumber", "5012 3456 7890");
 
   const [ifsc, setIfsc] =
-    useState("HDFC0001234");
+    useOnboardingValue("ifsc", "HDFC0001234");
 
   const [bankName, setBankName] =
-    useState("HDFC Bank");
+    useOnboardingValue("bankName", "HDFC Bank");
 
   const [branchName, setBranchName] =
-    useState("Warangal Main Branch");
+    useOnboardingValue("branchName", "Warangal Main Branch");
 
   const [upiId, setUpiId] =
-    useState("kitswclub@okhdfcbank");
+    useOnboardingValue("upiId", "kitswclub@okhdfcbank");
 
   const [fileVersion, setFileVersion] = useState(0);
+  const fieldErrors = useOnboardingDraft((state) => state.errors);
+  const setFieldErrors = useOnboardingDraft((state) => state.setErrors);
 
   const logoUploaded = Boolean(onboardingFileStore.logo);
   const panUploaded = Boolean(onboardingFileStore.documents.pan);
@@ -192,11 +207,17 @@ export default function OnboardingStepContent() {
   const otherDocumentUploaded = Boolean(onboardingFileStore.documents.other);
 
   const handleLogoUpload = (file: File) => {
+    const error = validateUpload(file, true);
+    setFieldErrors((current) => ({ ...current, "Organization Logo": error }));
+    if (error) return;
     saveLogoFile(file);
     setFileVersion((version) => version + 1);
   };
 
   const handleDocumentUpload = (key: string, file: File) => {
+    const error = validateUpload(file);
+    setFieldErrors((current) => ({ ...current, Documents: error }));
+    if (error) return;
     saveUploadedFile(key, file);
     setFileVersion((version) => version + 1);
   };
@@ -217,17 +238,57 @@ export default function OnboardingStepContent() {
     }
   }, [rawStep, parsedStep, router]);
 
-  const goToStep = (step: number) => {
-    if (step >= 1 && step <= 5) {
-      router.push(`/onboarding/${step}`);
+  const validateStep = (step: number) => {
+    const labels: Record<string, string> = {
+      organizationName: "Organization / Group Name", organizationType: "Organization Type",
+      contactName: "Your Full Name", logoUrl: "Organization Logo", email: step === 1 ? "Email Address" : "Official Email Address",
+      phone: step === 1 ? "Mobile Number" : "Public Contact Number", address: step === 1 ? "Address" : "Full Address",
+      city: "City", state: "State", pincode: "Pincode", accountHolder: "Account Holder Name",
+      accountNumber: "Account Number", confirmAccountNumber: "Confirm Account Number", ifsc: "IFSC Code",
+      bankName: "Bank Name", branchName: "Branch Name", upiId: "UPI ID",
+    };
+    const results = step === 1 ? [
+      organizationDetailsSchema.safeParse({ organizationName, organizationType, contactName, logoUrl: onboardingFileStore.logo?.url ?? "" }),
+      contactAddressSchema.safeParse({ email, phone: mobile, address, city, state, pincode }),
+    ] : step === 2 ? [contactAddressSchema.safeParse({ email: officialEmail, phone: publicContact, address: fullAddress, city, state, pincode })]
+      : step === 3 ? [payoutDetailsSchema.safeParse({ accountHolder, accountNumber, confirmAccountNumber, ifsc, bankName, branchName, upiId })] : [];
+    const errors: Record<string, string> = {};
+    for (const result of results) {
+      if (!result.success) for (const issue of result.error.issues) {
+        const label = labels[String(issue.path[0])];
+        if (label && !errors[label]) errors[label] = issue.message;
+      }
     }
+    return errors;
   };
 
-  const handleNext = () => {
-    if (currentStep < 5) {
-      goToStep(currentStep + 1);
-    }
+  const showErrors = (errors: Record<string, string>) => {
+    setFieldErrors(errors);
+    window.requestAnimationFrame(() => {
+      const invalid = document.querySelector<HTMLElement>('[aria-invalid="true"]');
+      const target = invalid ?? document.getElementById("onboarding-errors");
+      target?.focus();
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
   };
+
+  const goToStep = (step: number) => {
+    if (step < 1 || step > 5) return;
+    if (step > currentStep) {
+      for (let candidate = currentStep; candidate < step; candidate++) {
+        const errors = validateStep(candidate);
+        if (Object.keys(errors).length) {
+          showErrors(errors);
+          if (candidate !== currentStep) router.push(`/onboarding/${candidate}`);
+          return;
+        }
+      }
+    }
+    setFieldErrors({});
+    router.push(`/onboarding/${step}`);
+  };
+
+  const handleNext = () => goToStep(currentStep + 1);
 
   const handlePrevious = () => {
     if (currentStep > 1) {
@@ -245,13 +306,18 @@ export default function OnboardingStepContent() {
   };
 
   const handleSubmit = () => {
-  setSubmitted(true);
-
-  // Save onboarding completion
-  localStorage.setItem("onboardingCompleted", "true");
-
-  router.push("/onboarding/status");
-};
+    for (let step = 1; step <= 3; step++) {
+      const errors = validateStep(step);
+      if (Object.keys(errors).length) {
+        showErrors(errors);
+        router.push(`/onboarding/${step}`);
+        return;
+      }
+    }
+    setSubmitted(true);
+    localStorage.setItem("onboardingCompleted", "true");
+    router.push("/onboarding/status");
+  };
 
   const pageTitle = useMemo(() => {
     switch (currentStep) {
@@ -273,6 +339,7 @@ export default function OnboardingStepContent() {
   void fileVersion;
 
   return (
+    <FieldErrors.Provider value={fieldErrors}>
     <div className="min-h-screen bg-[#f7faf9] p-3 md:p-4">
       <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1540px] overflow-hidden rounded-[20px] border border-[#dfe8e5] bg-white shadow-[0_8px_35px_rgba(15,23,42,0.08)]">
         <Sidebar
@@ -284,6 +351,12 @@ export default function OnboardingStepContent() {
           <TopHelp />
 
           <div className="h-full overflow-y-auto px-6 pb-8 pt-4 md:px-10 lg:px-12">
+            {Object.values(fieldErrors).some(Boolean) && (
+              <div id="onboarding-errors" role="alert" tabIndex={-1} className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <p className="font-semibold">Please correct the following before continuing:</p>
+                <ul className="list-disc pl-5">{Object.entries(fieldErrors).filter(([, error]) => error).map(([label, error]) => <li key={label}>{label}: {error}</li>)}</ul>
+              </div>
+            )}
             {currentStep !== 1 && (
               <button
                 type="button"
@@ -420,6 +493,7 @@ export default function OnboardingStepContent() {
         </main>
       </div>
     </div>
+    </FieldErrors.Provider>
   );
 }
 
@@ -532,7 +606,7 @@ function Sidebar({
           {currentStep === 1 && (
             <>
               <div className="mb-2 text-[34px] leading-none text-[#0db77a]">
-                â€œ
+                “
               </div>
 
               <p className="font-serif text-[17px] italic leading-6 text-[#27344b]">
@@ -540,7 +614,7 @@ function Sidebar({
               </p>
 
               <p className="mt-4 text-[13px] font-semibold text-[#46546b]">
-                â€” Team Zordr
+                — Team Zordr
               </p>
             </>
           )}
@@ -548,7 +622,7 @@ function Sidebar({
           {currentStep === 2 && (
             <SidebarMessage
               icon={<MapPin className="h-6 w-6" />}
-              title="Youâ€™re almost there!"
+              title="You're almost there!"
               text="Just a few more details to set up your organizer account."
             />
           )}
@@ -565,7 +639,7 @@ function Sidebar({
             <SidebarMessage
               icon={<FileCheck2 className="h-6 w-6" />}
               title="Almost complete!"
-              text="Upload the required documents and continue."
+              text="Upload any applicable documents (optional) and continue."
             />
           )}
 
@@ -784,13 +858,14 @@ function StepOne({
               </p>
 
               <p className="mt-1 text-[13px] text-[#70809a]">
-                PNG, JPG up to 2MB (recommended 500Ã—500)
+                PNG, JPG up to 5 MB (recommended 500×500)
               </p>
             </div>
           </label>
 
           <input
             id="organization-logo-upload"
+            aria-label="Organization Logo"
             type="file"
             accept="image/png,image/jpeg,image/jpg"
             className="hidden"
@@ -1184,9 +1259,9 @@ function StepThree({
           label="IFSC Code"
           required
           value={ifsc}
-          onChange={setIfsc}
+          onChange={(value) => setIfsc(value.toUpperCase())}
           helper="Enter 11-character IFSC code."
-          valid
+          valid={/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.trim().toUpperCase())}
         />
 
         <FieldWithIcon
@@ -1235,7 +1310,7 @@ function StepThree({
 
             <ul className="mt-2 list-disc space-y-1 pl-5 text-[14px] leading-5 text-[#53647f]">
               <li>
-                Payouts are usually processed within 3â€“5
+                Payouts are usually processed within 3–5
                 business days after the event.
               </li>
               <li>
@@ -1311,8 +1386,7 @@ function StepFour({
       <div className="space-y-4">
         <DocumentUpload
           title="PAN Card"
-          description="PAN card of the organization or authorized representative."
-          required
+          description="PAN card of the organization or authorized representative (optional)."
           uploaded={panUploaded}
           file={onboardingFileStore.documents.pan}
           inputId="document-pan-upload"
@@ -1461,7 +1535,7 @@ function StepFive({
 
             <div className="flex h-[76px] w-[76px] items-center justify-center rounded-lg bg-black text-center">
               <div>
-                <div className="text-2xl">ðŸ”¥</div>
+                <div className="text-2xl">🔥</div>
                 <div className="text-[8px] font-bold text-white">
                   KITSW
                 </div>
@@ -1600,7 +1674,7 @@ function StepFive({
                 Privacy Policy
               </button>
               . We will review your application and notify you
-              via email and WhatsApp within 1â€“2 business days.
+              via email and WhatsApp within 1–2 business days.
             </p>
           </div>
         </div>
@@ -1722,9 +1796,10 @@ function Field({
   helper?: string;
   disabled?: boolean;
 }) {
+  const field = useField(label);
   return (
     <div>
-      <label className="mb-2 block text-[14px] font-medium text-[#121b2a]">
+      <label htmlFor={field.id} className="mb-2 block text-[14px] font-medium text-[#121b2a]">
         {label}
 
         {required && (
@@ -1733,6 +1808,8 @@ function Field({
       </label>
 
       <input
+          {...field.props}
+          aria-required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -1743,6 +1820,8 @@ function Field({
             : ""
         }`}
       />
+
+      <FieldError id={field.id} error={field.error} />
 
       {helper && (
         <p className="mt-1.5 text-[12px] text-[#73829b]">
@@ -1774,9 +1853,10 @@ function FieldWithIcon({
   disabled?: boolean;
   valid?: boolean;
 }) {
+  const field = useField(label);
   return (
     <div>
-      <label className="mb-2 block text-[14px] font-medium text-[#121b2a]">
+      <label htmlFor={field.id} className="mb-2 block text-[14px] font-medium text-[#121b2a]">
         {label}
 
         {required && (
@@ -1794,6 +1874,8 @@ function FieldWithIcon({
         </div>
 
         <input
+          {...field.props}
+          aria-required={required}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
@@ -1805,6 +1887,8 @@ function FieldWithIcon({
           <Check className="mr-3 h-5 w-5 text-[#0db77a]" />
         )}
       </div>
+
+      <FieldError id={field.id} error={field.error} />
 
       {helper && (
         <p className="mt-1.5 text-[12px] text-[#73829b]">
@@ -1830,9 +1914,10 @@ function TextAreaField({
   onChange: (v: string) => void;
   helper?: string;
 }) {
+  const field = useField(label);
   return (
     <div>
-      <label className="mb-2 block text-[14px] font-medium text-[#121b2a]">
+      <label htmlFor={field.id} className="mb-2 block text-[14px] font-medium text-[#121b2a]">
         {label}
 
         {required && (
@@ -1846,12 +1931,16 @@ function TextAreaField({
         </div>
 
         <textarea
+          {...field.props}
+          aria-required={required}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={3}
           className="min-h-[82px] flex-1 resize-none bg-transparent px-3 py-3 text-[14px] leading-6 text-[#182438] outline-none"
         />
       </div>
+
+      <FieldError id={field.id} error={field.error} />
 
       {helper && (
         <p className="mt-1.5 text-[12px] text-[#73829b]">
@@ -1877,9 +1966,10 @@ function SelectField({
   onChange: (v: string) => void;
   icon?: React.ReactNode;
 }) {
+  const field = useField(label);
   return (
     <div>
-      <label className="mb-2 block text-[14px] font-medium text-[#121b2a]">
+      <label htmlFor={field.id} className="mb-2 block text-[14px] font-medium text-[#121b2a]">
         {label}
 
         {required && (
@@ -1895,6 +1985,8 @@ function SelectField({
         )}
 
         <select
+          {...field.props}
+          aria-required={required}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={`h-[43px] w-full appearance-none rounded-lg border border-[#d6e0e7] bg-white pr-10 text-[14px] text-[#182438] outline-none transition focus:border-[#0db77a] focus:ring-2 focus:ring-[#0db77a]/10 ${
@@ -1910,6 +2002,7 @@ function SelectField({
 
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#687891]" />
       </div>
+      <FieldError id={field.id} error={field.error} />
     </div>
   );
 }
@@ -1929,19 +2022,20 @@ function PhoneField({
   placeholder?: string;
   helper?: string;
 }) {
+  const field = useField(label);
   const [countryCode, setCountryCode] = useState("+91");
 
   const countryCodes = [
-    { code: "+91", country: "India", flag: "ðŸ‡®ðŸ‡³" },
-    { code: "+1", country: "USA / Canada", flag: "ðŸ‡ºðŸ‡¸" },
-    { code: "+44", country: "UK", flag: "ðŸ‡¬ðŸ‡§" },
-    { code: "+61", country: "Australia", flag: "ðŸ‡¦ðŸ‡º" },
-    { code: "+971", country: "UAE", flag: "ðŸ‡¦ðŸ‡ª" },
+    { code: "+91", country: "India", flag: "🇮🇳" },
+    { code: "+1", country: "USA / Canada", flag: "🇺🇸" },
+    { code: "+44", country: "UK", flag: "🇬🇧" },
+    { code: "+61", country: "Australia", flag: "🇦🇺" },
+    { code: "+971", country: "UAE", flag: "🇦🇪" },
   ];
 
   return (
     <div>
-      <label className="mb-2 block text-[14px] font-medium text-[#121b2a]">
+      <label htmlFor={field.id} className="mb-2 block text-[14px] font-medium text-[#121b2a]">
         {label}
 
         {required && (
@@ -1968,12 +2062,16 @@ function PhoneField({
         </div>
 
         <input
+          {...field.props}
+          aria-required={required}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className="min-w-0 flex-1 px-3 text-[14px] text-[#182438] outline-none placeholder:text-[#8a98ac]"
         />
       </div>
+
+      <FieldError id={field.id} error={field.error} />
 
       {helper && (
         <p className="mt-1.5 text-[12px] text-[#73829b]">
@@ -2246,7 +2344,7 @@ function DocumentReviewRow({
         </div>
       ) : (
         <span className="text-[#64738b]">
-          â€” Not uploaded
+          — Not uploaded
         </span>
       )}
     </div>

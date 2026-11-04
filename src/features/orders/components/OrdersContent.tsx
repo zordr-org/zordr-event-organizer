@@ -81,9 +81,9 @@ export default function OrdersContent() {
    * Centralized event source.
    *
    * mock/db.ts
-   *     â†“
+   *     ↓
    * events.service.ts
-   *     â†“
+   *     ↓
    * this page
    */
   const organizerEvents = getEvents();
@@ -471,7 +471,7 @@ export default function OrdersContent() {
           order.email,
           order.ticket,
           order.quantity,
-          `â‚¹${order.amount.toLocaleString(
+          `₹${order.amount.toLocaleString(
             "en-IN",
           )}`,
           order.payment,
@@ -682,7 +682,7 @@ export default function OrdersContent() {
 
                       <p className="mt-1 text-sm text-[#53658f]">
                         {currentEvent.date}
-                        &nbsp; â€¢ &nbsp;
+                        &nbsp; • &nbsp;
                         {currentEvent.venue}
                       </p>
 
@@ -708,7 +708,7 @@ export default function OrdersContent() {
                       href="/events"
                       className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold transition hover:bg-slate-50"
                     >
-                      View Event â†’
+                      View Event →
                     </Link>
                   </div>
                 </div>
@@ -1199,7 +1199,7 @@ export default function OrdersContent() {
                             </td>
 
                             <td className="px-3 py-4 font-semibold">
-                              â‚¹
+                              ₹
                               {order.amount.toLocaleString(
                                 "en-IN",
                               )}
@@ -1297,7 +1297,7 @@ export default function OrdersContent() {
                 <p className="text-sm text-[#53658f]">
                   Showing{" "}
                   <strong>
-                    {from}â€“{to}
+                    {from}–{to}
                   </strong>{" "}
                   of{" "}
                   <strong>
@@ -1540,7 +1540,7 @@ export default function OrdersContent() {
 
                   <DetailItem
                     label="Amount"
-                    value={`â‚¹${selectedOrder.amount.toLocaleString(
+                    value={`₹${selectedOrder.amount.toLocaleString(
                       "en-IN",
                     )}`}
                   />
@@ -1660,7 +1660,7 @@ export default function OrdersContent() {
                 </p>
 
                 <p className="mt-1 text-sm text-[#53658f]">
-                  {currentEvent.date} â€¢{" "}
+                  {currentEvent.date} •{" "}
                   {currentEvent.venue}
                 </p>
               </div>

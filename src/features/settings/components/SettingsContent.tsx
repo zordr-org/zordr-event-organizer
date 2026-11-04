@@ -31,7 +31,9 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { getEvents } from "@/services/events.service";
 
 /* =========================================================
    TYPES
@@ -125,7 +127,7 @@ const eventOptions = [
 const initialEvents = {
   "Crescendo Fest 2026": {
     name: "Crescendo Fest 2026",
-    date: "Oct 12, 2026, 4:00 PM â€“ 10:00 PM",
+    date: "Oct 12, 2026, 4:00 PM – 10:00 PM",
     venue: "Main Auditorium, KITSW",
     location: "Warangal, Telangana 506015",
     description:
@@ -142,7 +144,7 @@ const initialEvents = {
 
   "Tech Talk Series": {
     name: "Tech Talk Series",
-    date: "Nov 08, 2026, 10:00 AM â€“ 4:00 PM",
+    date: "Nov 08, 2026, 10:00 AM – 4:00 PM",
     venue: "Seminar Hall, KITSW",
     location: "Warangal, Telangana 506015",
     description:
@@ -159,7 +161,7 @@ const initialEvents = {
 
   "Cultural Night": {
     name: "Cultural Night",
-    date: "Dec 05, 2026, 5:00 PM â€“ 10:00 PM",
+    date: "Dec 05, 2026, 5:00 PM – 10:00 PM",
     venue: "Open Air Theatre, KITSW",
     location: "Warangal, Telangana 506015",
     description:
@@ -211,45 +213,34 @@ function Toast({
    MODAL
 ========================================================= */
 
-function Modal({
-  title,
-  subtitle,
-  children,
-  onClose,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-  onClose: () => void;
+function Modal({ title, subtitle, children, onClose }: {
+  title: string; subtitle?: string; children: React.ReactNode; onClose: () => void;
 }) {
-  return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0b1735]/35 p-5 backdrop-blur-[2px]">
-      <div className="max-h-[90vh] w-full max-w-[620px] overflow-y-auto rounded-2xl bg-white shadow-[0_25px_80px_rgba(10,30,70,0.22)]">
-        <div className="sticky top-0 z-10 flex items-start justify-between border-b border-slate-100 bg-white px-6 py-5">
-          <div>
-            <h2 className="text-[19px] font-bold text-[#182143]">
-              {title}
-            </h2>
-
-            {subtitle && (
-              <p className="mt-1 text-sm text-[#65769a]">
-                {subtitle}
-              </p>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-[#65769a] hover:bg-slate-100 hover:text-[#182143]"
-          >
-            <X size={19} />
-          </button>
-        </div>
-
-        <div className="p-6">{children}</div>
+  const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  useEffect(() => {
+    const dialog = ref.current;
+    const trigger = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    dialog?.showModal();
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = previousOverflow;
+      if (trigger?.isConnected) trigger.focus();
+    };
+  }, []);
+  return createPortal(
+    <dialog ref={ref} aria-labelledby={titleId} aria-modal="true"
+      onCancel={(event) => { event.preventDefault(); onClose(); }}
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+      className="m-auto max-h-[90vh] w-[calc(100%-2.5rem)] max-w-[620px] overflow-y-auto rounded-2xl bg-white p-0 text-[#182143] shadow-2xl backdrop:bg-[#0b1735]/35 backdrop:backdrop-blur-[2px]">
+      <div className="sticky top-0 z-10 flex items-start justify-between border-b border-slate-100 bg-white px-6 py-5">
+        <div><h2 id={titleId} className="text-[19px] font-bold">{title}</h2>{subtitle && <p className="mt-1 text-sm text-[#65769a]">{subtitle}</p>}</div>
+        <button type="button" aria-label={`Close ${title}`} onClick={onClose} className="rounded-lg p-2 text-[#65769a] hover:bg-slate-100"><X size={19} /></button>
       </div>
-    </div>
+      <div className="p-6">{children}</div>
+    </dialog>, document.body,
   );
 }
 
@@ -334,9 +325,11 @@ function SecondaryButton({
 ========================================================= */
 
 function Toggle({
+  label,
   enabled,
   onChange,
 }: {
+  label: string;
   enabled: boolean;
   onChange: () => void;
 }) {
@@ -344,6 +337,7 @@ function Toggle({
     <button
       type="button"
       role="switch"
+      aria-label={label}
       aria-checked={enabled}
       onClick={onChange}
       className={`relative h-6 w-11 shrink-0 rounded-full transition ${
@@ -514,7 +508,7 @@ export default function SettingsContent() {
   };
 
   const openEventPage = () => {
-    window.open("/events/1", "_blank", "noopener,noreferrer");
+    window.open(`/events/${getEvents().find((event) => event.title === selectedEvent)?.id ?? "1"}`, "_blank", "noopener,noreferrer");
   };
 
   const downloadQRCode = () => {
@@ -985,21 +979,21 @@ export default function SettingsContent() {
                         <div className="mt-2 space-y-2 text-sm text-[#53658f]">
                           <p>
                             <span className="mr-2 font-bold text-[#0bb978]">
-                              âœ“
+                              ✓
                             </span>
-                            Recommended size: 1920 Ã— 1080 px
+                            Recommended size: 1920 × 1080 px
                           </p>
 
                           <p>
                             <span className="mr-2 font-bold text-[#0bb978]">
-                              âœ“
+                              ✓
                             </span>
                             JPG or PNG (max 5 MB)
                           </p>
 
                           <p>
                             <span className="mr-2 font-bold text-[#0bb978]">
-                              âœ“
+                              ✓
                             </span>
                             Keep important content in center
                           </p>
@@ -1274,6 +1268,7 @@ export default function SettingsContent() {
 
             {activeTab === "Team" && (
               <SettingsPanel
+                eventHref={`/events/${getEvents().find((event) => event.title === selectedEvent)?.id ?? "1"}`}
                 icon={<Users size={23} />}
                 title="Team Members"
                 subtitle="Manage people who can access your organizer dashboard."
@@ -1336,6 +1331,7 @@ export default function SettingsContent() {
 
             {activeTab === "Notifications" && (
               <SettingsPanel
+                eventHref={`/events/${getEvents().find((event) => event.title === selectedEvent)?.id ?? "1"}`}
                 icon={<Bell size={23} />}
                 title="Notification Preferences"
                 subtitle="Choose which notifications you want to receive."
@@ -1384,6 +1380,7 @@ export default function SettingsContent() {
 
             {activeTab === "Payment & Payouts" && (
               <SettingsPanel
+                eventHref={`/events/${getEvents().find((event) => event.title === selectedEvent)?.id ?? "1"}`}
                 icon={<CreditCard size={23} />}
                 title="Payment & Payouts"
                 subtitle="Manage your payout account and payment preferences."
@@ -1391,7 +1388,7 @@ export default function SettingsContent() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <PaymentCard
                     title="Payout Account"
-                    value="HDFC Bank â€¢â€¢â€¢â€¢ 1234"
+                    value="HDFC Bank •••• 1234"
                     subtitle="Primary settlement account"
                   />
 
@@ -1409,7 +1406,7 @@ export default function SettingsContent() {
 
                   <PaymentCard
                     title="Currency"
-                    value="INR (â‚¹)"
+                    value="INR (₹)"
                     subtitle="Indian Rupee"
                   />
                 </div>
@@ -1435,6 +1432,7 @@ export default function SettingsContent() {
 
             {activeTab === "Integrations" && (
               <SettingsPanel
+                eventHref={`/events/${getEvents().find((event) => event.title === selectedEvent)?.id ?? "1"}`}
                 icon={<Link2 size={23} />}
                 title="Integrations"
                 subtitle="Connect external services to your event."
@@ -1480,6 +1478,7 @@ export default function SettingsContent() {
 
             {activeTab === "Security" && (
               <SettingsPanel
+                eventHref={`/events/${getEvents().find((event) => event.title === selectedEvent)?.id ?? "1"}`}
                 icon={<ShieldCheck size={23} />}
                 title="Security"
                 subtitle="Protect your organizer account and event data."
@@ -2049,6 +2048,7 @@ function SettingToggle({
   return (
     <div className="flex items-start gap-3">
       <Toggle
+        label={label}
         enabled={enabled}
         onChange={onChange}
       />
@@ -2071,11 +2071,13 @@ function SettingToggle({
 ========================================================= */
 
 function SettingsPanel({
+  eventHref,
   icon,
   title,
   subtitle,
   children,
 }: {
+  eventHref: string;
   icon: React.ReactNode;
   title: string;
   subtitle: string;
@@ -2116,7 +2118,7 @@ function SettingsPanel({
 
           <div className="mt-4 space-y-2">
             <Link
-              href="/events/1"
+              href={eventHref}
               className="flex items-center justify-between rounded-lg bg-[#e7faef] px-3 py-3 text-sm font-semibold text-[#08a96c]"
             >
               <span className="flex items-center gap-3">
@@ -2207,6 +2209,7 @@ function NotificationRow({
       </div>
 
       <Toggle
+        label={title}
         enabled={enabled}
         onChange={onChange}
       />
@@ -2330,6 +2333,7 @@ function ModalToggle({
       </div>
 
       <Toggle
+        label={title}
         enabled={enabled}
         onChange={onChange}
       />

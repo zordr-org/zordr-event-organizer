@@ -443,7 +443,7 @@ export default function ScannerContent() {
             <div className="mb-5">
 
               <Link
-                href="/events"
+                href={`/events/${currentEvent?.id ?? SELECTED_EVENT_ID}`}
                 className="mb-2 flex items-center gap-2 text-sm font-medium text-[#304878]"
               >
                 <ArrowLeft size={17} />
@@ -500,7 +500,7 @@ export default function ScannerContent() {
                   <p className="mt-1 text-sm text-[#536a94]">
                     {currentEvent.date}
                     <span className="mx-2">
-                      ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢
+                      •
                     </span>
                     {currentEvent.venue}
                   </p>
@@ -526,7 +526,7 @@ export default function ScannerContent() {
                   </span>
 
                   <Link
-                    href="/events"
+                    href={`/events/${currentEvent?.id ?? SELECTED_EVENT_ID}`}
                     className="flex items-center gap-3 rounded-lg border border-[#dce5ed] px-5 py-3 text-sm font-semibold transition hover:bg-[#f7fafc]"
                   >
                     View Event
@@ -1173,6 +1173,8 @@ export default function ScannerContent() {
 
                                 <button
                                   type="button"
+                                  aria-label={`View scan details for ${scan.id}`}
+                                  onClick={() => setSelectedScan(scan)}
                                   className="text-[#53617b]"
                                 >
                                   <MoreVertical
@@ -1231,6 +1233,7 @@ export default function ScannerContent() {
               </div>
 
               <button
+                aria-label="Close recent scans"
                 type="button"
                 onClick={() =>
                   setShowAllScans(
@@ -1412,6 +1415,7 @@ export default function ScannerContent() {
               </div>
 
               <button
+                aria-label="Close attendee details"
                 type="button"
                 onClick={() =>
                   setSelectedScan(
@@ -1666,6 +1670,8 @@ function ToggleRow({
         type="button"
         onClick={onClick}
         aria-label={label}
+        role="switch"
+        aria-checked={enabled}
         className={`relative h-5 w-9 shrink-0 rounded-full transition ${
           enabled
             ? "bg-[#13b878]"
